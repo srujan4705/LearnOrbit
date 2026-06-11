@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Trash2, Pencil, BookOpen, Loader2, ArrowLeft, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Pencil, BookOpen, Loader2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 
@@ -58,7 +58,6 @@ function TopicForm({ topic, onSave, onCancel }) {
 }
 
 export default function RoadmapBuilder() {
-  const urlParams = new URLSearchParams(window.location.search);
   const courseIdFromUrl = window.location.pathname.split('/').pop();
   const courseId = courseIdFromUrl;
 
@@ -159,7 +158,7 @@ export default function RoadmapBuilder() {
                 <CardTitle className="text-base font-semibold">Week {weekNum}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {weekTopics.map((topic, idx) => (
+                {weekTopics.map((topic) => (
                   <div
                     key={topic.id}
                     className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"

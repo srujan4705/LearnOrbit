@@ -10,7 +10,7 @@ import { ExternalLink, Clock, BookOpen, Send, CheckCircle2, Loader2 } from 'luci
 import { base44 } from '@/api/base44Client';
 import { toast } from '@/components/ui/use-toast';
 
-export default function TodayTask({ topic, course, currentDay, existingProgress, userId, onProgressSubmitted }) {
+export default function TodayTask({ topic, course, currentDay: _currentDay, existingProgress, userId, onProgressSubmitted }) {
   const [status, setStatus] = useState(existingProgress?.status || 'not_started');
   const [hours, setHours] = useState(existingProgress?.hours_studied?.toString() || '');
   const [difficulty, setDifficulty] = useState(existingProgress?.difficulty || '');

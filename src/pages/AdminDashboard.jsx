@@ -2,9 +2,8 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import StatCard from '@/components/dashboard/StatCard';
-import { Users, BookOpen, CheckCircle2, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Users, BookOpen, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -24,7 +23,7 @@ export default function AdminDashboard() {
     queryFn: () => base44.entities.UserProgress.list('-created_date', 500),
   });
 
-  const { data: enrollments = [] } = useQuery({
+  const { data: _enrollments = [] } = useQuery({
     queryKey: ['all-enrollments'],
     queryFn: () => base44.entities.Enrollment.list(),
   });

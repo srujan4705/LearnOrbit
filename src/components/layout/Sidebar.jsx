@@ -9,7 +9,6 @@ import {
   RotateCcw,
   Users,
   BarChart3,
-  Settings,
   LogOut,
   GraduationCap,
   ChevronLeft,
