@@ -6,7 +6,15 @@ export function calculateCurrentDay(courseStartDate) {
   today.setHours(0, 0, 0, 0);
   start.setHours(0, 0, 0, 0);
   const diff = differenceInCalendarDays(today, start);
-  return diff + 1; // Day 1 is the start date
+  return diff < 0 ? 0 : diff + 1; // Day 1 is the start date, 0 if course hasn't started
+}
+
+export function isCourseStarted(courseStartDate) {
+  const start = new Date(courseStartDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  start.setHours(0, 0, 0, 0);
+  return differenceInCalendarDays(today, start) >= 0;
 }
 
 export function getCurrentWeekAndDay(dayNumber) {

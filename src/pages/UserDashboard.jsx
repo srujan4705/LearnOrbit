@@ -6,20 +6,107 @@ import {
   calculateCurrentDay,
   getTopicForDay,
   getCompletionPercentage,
+  isCourseStarted,
 } from "@/lib/courseUtils";
-import StatCard from "@/components/dashboard/StatCard";
 import TodayTask from "@/components/dashboard/TodayTask";
-import {
-  BookOpen,
-  Target,
-  Clock,
-  TrendingUp,
-  GraduationCap,
-} from "lucide-react";
+import { GraduationCap, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+function CourseCard({ course, topics, progress, user, queryClient }) {
+  const currentDay = calculateCurrentDay(course.start_date);
+  const isStarted = isCourseStarted(course.start_date);
+  const todayTopic = isStarted ? getTopicForDay(topics, currentDay) : null;
+  const completedCount = progress.filter(
+    (p) => p.status === "completed",
+  ).length;
+  const totalHours = progress.reduce(
+    (sum, p) => sum + Number(p.hours_studied || 0),
+    0,
+  );
+  const completion = getCompletionPercentage(topics.length, completedCount);
+  const todayProgress = todayTopic
+    ? progress.find((p) => p.topic_id === todayTopic.id)
+    : null;
+  const currentWeek = isStarted ? Math.ceil(currentDay / 7) : 0;
+
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-6 space-y-5">
+        <div>
+          <h3 className="font-semibold text-lg">{course.name}</h3>
+          {!isStarted ? (
+            <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Starts on {format(new Date(course.start_date), 'MMM d, yyyy')}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">
+              Week {currentWeek} · Day {currentDay}
+            </p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="text-xs text-muted-foreground mb-1">Completion</div>
+            <div className="text-xl font-bold text-primary">{completion}%</div>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="text-xs text-muted-foreground mb-1">Hours</div>
+            <div className="text-xl font-bold text-accent">
+              {totalHours.toFixed(1)}
+            </div>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="text-xs text-muted-foreground mb-1">Topics Done</div>
+            <div className="text-xl font-bold text-amber-600">
+              {completedCount}/{topics.length}
+            </div>
+          </div>
+          <div className="p-3 rounded-lg bg-muted/50">
+            <div className="text-xs text-muted-foreground mb-1">Today</div>
+            <div className="text-xl font-bold text-primary">
+              {!isStarted ? "🚀" : todayTopic ? "📖" : "✓"}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Progress value={completion} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {completedCount} of {topics.length} topics completed
+          </p>
+        </div>
+
+        {isStarted && todayTopic ? (
+          <TodayTask
+            topic={todayTopic}
+            course={course}
+            currentDay={currentDay}
+            existingProgress={todayProgress}
+            userId={user.id}
+            onProgressSubmitted={() =>
+              queryClient.invalidateQueries({ queryKey: ["all-user-progress"] })
+            }
+          />
+        ) : !isStarted ? (
+          <Alert className="bg-amber-50 border-amber-200">
+            <Clock className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-sm text-amber-800">
+              This course will start on {format(new Date(course.start_date), 'MMMM d, yyyy')}.
+              Come back then to begin learning!
+            </AlertDescription>
+          </Alert>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function UserDashboard() {
   const { user } = useAuth();
@@ -37,49 +124,43 @@ export default function UserDashboard() {
     queryFn: () => base44.entities.Course.filter({ status: "active" }),
   });
 
+  const { data: allTopics = [] } = useQuery({
+    queryKey: ["all-topics"],
+    queryFn: () => base44.entities.CourseTopic.list("-created_date", 500),
+  });
+
+  const { data: allProgress = [] } = useQuery({
+    queryKey: ["user-progress", user?.id],
+    queryFn: () => base44.entities.UserProgress.filter({ user_id: user.id }),
+    enabled: !!user?.id,
+  });
+
   const enrolledCourseIds = enrollments.map((e) => e.course_id);
-  const activeCourse = courses.find((c) => enrolledCourseIds.includes(c.id));
+  const activeCourses = courses.filter((c) => enrolledCourseIds.includes(c.id));
 
-  const { data: topics = [] } = useQuery({
-    queryKey: ["topics", activeCourse?.id],
-    queryFn: () =>
-      base44.entities.CourseTopic.filter({ course_id: activeCourse.id }),
-    enabled: !!activeCourse?.id,
+  const topicsByCourse = {};
+  allTopics.forEach((t) => {
+    topicsByCourse[t.course_id] = topicsByCourse[t.course_id] || [];
+    topicsByCourse[t.course_id].push(t);
   });
 
-  const { data: progress = [] } = useQuery({
-    queryKey: ["user-progress", user?.id, activeCourse?.id],
-    queryFn: () =>
-      base44.entities.UserProgress.filter({
-        user_id: user.id,
-        course_id: activeCourse.id,
-      }),
-    enabled: !!user?.id && !!activeCourse?.id,
+  const progressByCourse = {};
+  allProgress.forEach((p) => {
+    progressByCourse[p.course_id] = progressByCourse[p.course_id] || [];
+    progressByCourse[p.course_id].push(p);
   });
 
-  const currentDay = activeCourse
-    ? calculateCurrentDay(activeCourse.start_date)
-    : 0;
-  const todayTopic = getTopicForDay(topics, currentDay);
-  const completedCount = progress.filter(
-    (p) => p.status === "completed",
-  ).length;
-  const totalHours = progress.reduce(
+  const totalHoursAllCourses = allProgress.reduce(
     (sum, p) => sum + Number(p.hours_studied || 0),
     0,
   );
-  const completion = getCompletionPercentage(topics.length, completedCount);
-  const todayProgress = todayTopic
-    ? progress.find((p) => p.topic_id === todayTopic.id)
-    : null;
-  const currentWeek = Math.ceil(currentDay / 7);
 
-  if (!activeCourse) {
+  if (activeCourses.length === 0) {
     return (
       <div className="max-w-2xl mx-auto text-center py-20">
         <GraduationCap className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
         <h2 className="text-2xl font-heading font-bold mb-2">
-          No Active Course
+          No Active Courses
         </h2>
         <p className="text-muted-foreground mb-6">
           Browse available courses and enroll to get started.
@@ -96,89 +177,49 @@ export default function UserDashboard() {
       <div>
         <h1 className="text-2xl font-heading font-bold">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {activeCourse.name} · Week {currentWeek} · Day {currentDay}
+          {activeCourses.length} active
+          {activeCourses.length === 1 ? " course" : " courses"} · {totalHoursAllCourses.toFixed(1)} total hours
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Completion"
-          value={`${completion}%`}
-          icon={Target}
-          color="primary"
-        />
-        <StatCard
-          title="Topics Done"
-          value={completedCount}
-          icon={BookOpen}
-          color="accent"
-        />
-        <StatCard
-          title="Hours Studied"
-          value={totalHours.toFixed(1)}
-          icon={Clock}
-          color="amber"
-        />
-        <StatCard
-          title="Current Day"
-          value={currentDay}
-          icon={TrendingUp}
-          color="primary"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <TodayTask
-            topic={todayTopic}
-            course={activeCourse}
-            currentDay={currentDay}
-            existingProgress={todayProgress}
-            userId={user.id}
-            onProgressSubmitted={() =>
-              queryClient.invalidateQueries({ queryKey: ["user-progress"] })
-            }
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {activeCourses.map((course) => (
+          <CourseCard
+            key={course.id}
+            course={course}
+            topics={topicsByCourse[course.id] || []}
+            progress={progressByCourse[course.id] || []}
+            user={user}
+            queryClient={queryClient}
           />
-        </div>
-
-        <div className="space-y-4">
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <h3 className="font-semibold text-sm">Course Progress</h3>
-              <Progress value={completion} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {completedCount} of {topics.length} topics completed
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-5 space-y-3">
-              <h3 className="font-semibold text-sm">Quick Links</h3>
-              <div className="space-y-2">
-                <Link
-                  to="/tracker"
-                  className="block text-sm text-primary hover:underline"
-                >
-                  View Learning Tracker →
-                </Link>
-                <Link
-                  to="/roadmap"
-                  className="block text-sm text-primary hover:underline"
-                >
-                  View Full Roadmap →
-                </Link>
-                <Link
-                  to="/revision"
-                  className="block text-sm text-primary hover:underline"
-                >
-                  Revision Topics →
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        ))}
       </div>
+
+      <Card>
+        <CardContent className="p-5 space-y-3">
+          <h3 className="font-semibold text-sm">Quick Links</h3>
+          <div className="space-y-2">
+            <Link
+              to="/tracker"
+              className="block text-sm text-primary hover:underline"
+            >
+              View Learning Tracker →
+            </Link>
+            <Link
+              to="/roadmap"
+              className="block text-sm text-primary hover:underline"
+            >
+              View Full Roadmap →
+            </Link>
+            <Link
+              to="/revision"
+              className="block text-sm text-primary hover:underline"
+            >
+              Revision Topics →
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

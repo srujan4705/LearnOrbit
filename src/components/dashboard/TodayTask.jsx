@@ -34,27 +34,32 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
       return;
     }
     setSubmitting(true);
-    const data = {
-      user_id: userId,
-      course_id: course.id,
-      topic_id: topic.id,
-      week_number: topic.week_number,
-      day_number: topic.day_number,
-      status,
-      hours_studied: parseFloat(hours) || 0,
-      difficulty,
-      remarks,
-      submission_date: new Date().toISOString().split('T')[0],
-    };
+    try {
+      const data = {
+        user_id: userId,
+        course_id: course.id,
+        topic_id: topic.id,
+        week_number: topic.week_number,
+        day_number: topic.day_number,
+        status,
+        hours_studied: parseFloat(hours) || 0,
+        difficulty,
+        remarks,
+        submission_date: new Date().toISOString().split('T')[0],
+      };
 
-    if (existingProgress?.id) {
-      await base44.entities.UserProgress.update(existingProgress.id, data);
-    } else {
-      await base44.entities.UserProgress.create(data);
+      if (existingProgress?.id) {
+        await base44.entities.UserProgress.update(existingProgress.id, data);
+      } else {
+        await base44.entities.UserProgress.create(data);
+      }
+      toast({ title: 'Progress submitted!', description: 'Keep up the great work.' });
+      onProgressSubmitted?.();
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to submit progress', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
-    toast({ title: 'Progress submitted!', description: 'Keep up the great work.' });
-    setSubmitting(false);
-    onProgressSubmitted?.();
   };
 
   return (
