@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { calculateCourseCurrrentDay, getTopicForDay, isCourseStarted } from '@/lib/courseUtils';
+import { calculateCourseCurrentDay, getTopicForDay, isCourseStarted } from '@/lib/courseUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Circle, Play, ExternalLink, Map, Loader2, Lock, Clock } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function RoadmapView() {
 
   const getCourseRoadmap = (course) => {
     const topics = topicsByCourse[course.id] || [];
-    const courseCurrentDay = calculateCourseCurrrentDay(course.start_date);
+    const courseCurrentDay = calculateCourseCurrentDay(course.start_date);
     const isStarted = isCourseStarted(course.start_date);
     const currentTopic = isStarted && courseCurrentDay > 0 ? getTopicForDay(topics, courseCurrentDay) : null;
 

@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { BookOpen, Calendar, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { calculateCurrentDay, getCompletionPercentage } from '@/lib/courseUtils';
+import { calculateCourseCurrentDay, getCompletionPercentage } from '@/lib/courseUtils';
 
 export default function MyCourses() {
   const { user } = useAuth();
@@ -50,7 +50,7 @@ export default function MyCourses() {
     const completed = courseProgress.filter(p => p.status === 'completed').length;
     const total = topicsByCourse[e.course_id] || 0;
     const pct = getCompletionPercentage(total, completed);
-    const day = calculateCurrentDay(course.start_date);
+    const day = calculateCourseCurrentDay(course.start_date);
     return { ...e, course, completion: pct, completed, total, currentDay: day };
   }).filter(Boolean);
 

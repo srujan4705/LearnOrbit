@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
-  calculateCourseCurrrentDay,
+  calculateCourseCurrentDay,
   getTopicForDay,
   getCompletionPercentage,
   isCourseStarted,
@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 function CourseCard({ course, topics, progress, user, queryClient }) {
-  const courseCurrentDay = calculateCourseCurrrentDay(course.start_date);
+  const courseCurrentDay = calculateCourseCurrentDay(course.start_date);
   const isStarted = isCourseStarted(course.start_date);
   const todayTopic = isStarted && courseCurrentDay > 0 ? getTopicForDay(topics, courseCurrentDay) : null;
   const completedCount = progress.filter(

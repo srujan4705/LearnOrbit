@@ -1,6 +1,6 @@
 import { differenceInCalendarDays } from 'date-fns';
 
-export function calculateCourseCurrrentDay(courseStartDate) {
+export function calculateCourseCurrentDay(courseStartDate) {
   const start = new Date(courseStartDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ClipboardList, Loader2, ChevronDown, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { calculateCourseCurrrentDay, isCourseStarted, getTopicForDay } from '@/lib/courseUtils';
+import { calculateCourseCurrentDay, isCourseStarted, getTopicForDay } from '@/lib/courseUtils';
 
 const statusBadge = {
   not_started: 'bg-secondary text-secondary-foreground',
@@ -65,7 +65,7 @@ export default function Tracker() {
   activeCourses.forEach(c => {
     const courseProgress = allProgress.filter(p => p.course_id === c.id);
     const isStarted = isCourseStarted(c.start_date);
-    const courseCurrentDay = calculateCourseCurrrentDay(c.start_date);
+    const courseCurrentDay = calculateCourseCurrentDay(c.start_date);
 
     // Create entries for missed days
     const allEntries = [...courseProgress];
