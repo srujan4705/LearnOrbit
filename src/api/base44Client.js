@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://learnorbit-api.onrender.com/api";
 const TOKEN_KEY = "learnorbit_access_token";
 
 const ENTITY_ROUTES = {
@@ -74,7 +76,7 @@ function createEntityClient(route) {
         `/entities/${route}${buildQuery({
           order,
           limit,
-        })}`
+        })}`,
       );
     },
     async filter(filters = {}) {
@@ -101,7 +103,10 @@ function createEntityClient(route) {
 }
 
 const entities = Object.fromEntries(
-  Object.entries(ENTITY_ROUTES).map(([name, route]) => [name, createEntityClient(route)])
+  Object.entries(ENTITY_ROUTES).map(([name, route]) => [
+    name,
+    createEntityClient(route),
+  ]),
 );
 
 export const base44 = {
