@@ -156,13 +156,13 @@ export const base44 = {
     },
     setToken,
     getToken,
-    logout(redirectTo = "/login") {
+    logout(redirectTo = "/") {
       setToken(null);
       if (redirectTo) {
         window.location.href = redirectTo;
       }
     },
-    redirectToLogin(redirectTo = "/login") {
+    redirectToLogin(redirectTo = "/") {
       window.location.href = redirectTo;
     },
     async loginWithProvider() {
