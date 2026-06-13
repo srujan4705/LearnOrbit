@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
-  calculateCurrentDay,
+  calculateCourseCurrrentDay,
   getTopicForDay,
   getCompletionPercentage,
   isCourseStarted,
@@ -18,9 +18,9 @@ import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 function CourseCard({ course, topics, progress, user, queryClient }) {
-  const currentDay = calculateCurrentDay(course.start_date);
+  const courseCurrentDay = calculateCourseCurrrentDay(course.start_date);
   const isStarted = isCourseStarted(course.start_date);
-  const todayTopic = isStarted ? getTopicForDay(topics, currentDay) : null;
+  const todayTopic = isStarted && courseCurrentDay > 0 ? getTopicForDay(topics, courseCurrentDay) : null;
   const completedCount = progress.filter(
     (p) => p.status === "completed",
   ).length;
@@ -32,7 +32,7 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
   const todayProgress = todayTopic
     ? progress.find((p) => p.topic_id === todayTopic.id)
     : null;
-  const currentWeek = isStarted ? Math.ceil(currentDay / 7) : 0;
+  const currentWeek = isStarted ? Math.ceil(courseCurrentDay / 7) : 0;
 
   return (
     <Card className="overflow-hidden">
@@ -46,7 +46,7 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
             </p>
           ) : (
             <p className="text-xs text-muted-foreground mt-1">
-              Week {currentWeek} · Day {currentDay}
+              Week {currentWeek} · Day {courseCurrentDay}
             </p>
           )}
         </div>
@@ -87,11 +87,11 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
           <TodayTask
             topic={todayTopic}
             course={course}
-            currentDay={currentDay}
+            currentDay={courseCurrentDay}
             existingProgress={todayProgress}
             userId={user.id}
             onProgressSubmitted={() =>
-              queryClient.invalidateQueries({ queryKey: ["all-user-progress"] })
+              queryClient.invalidateQueries({ queryKey: ["user-progress"] })
             }
           />
         ) : !isStarted ? (
@@ -216,6 +216,12 @@ export default function UserDashboard() {
               className="block text-sm text-primary hover:underline"
             >
               Revision Topics →
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="block text-sm text-primary hover:underline"
+            >
+              Weekly Leaderboard →
             </Link>
           </div>
         </CardContent>

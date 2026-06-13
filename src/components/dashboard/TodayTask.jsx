@@ -29,8 +29,13 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
   }
 
   const handleSubmit = async () => {
+    const hoursValue = parseFloat(hours) || 0;
     if (!status || !difficulty) {
       toast({ title: 'Please fill in status and difficulty', variant: 'destructive' });
+      return;
+    }
+    if (hoursValue > 6) {
+      toast({ title: 'Maximum 6 hours allowed per day', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
@@ -42,7 +47,7 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
         week_number: topic.week_number,
         day_number: topic.day_number,
         status,
-        hours_studied: parseFloat(hours) || 0,
+        hours_studied: hoursValue,
         difficulty,
         remarks,
         submission_date: new Date().toISOString().split('T')[0],
@@ -119,6 +124,7 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
               <Input
                 type="number"
                 min="0"
+                max="6"
                 step="0.5"
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}

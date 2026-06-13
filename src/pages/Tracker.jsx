@@ -5,14 +5,16 @@ import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, Loader2, ChevronDown } from 'lucide-react';
+import { ClipboardList, Loader2, ChevronDown, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
+import { calculateCourseCurrrentDay, isCourseStarted, getTopicForDay } from '@/lib/courseUtils';
 
 const statusBadge = {
   not_started: 'bg-secondary text-secondary-foreground',
   in_progress: 'bg-amber-100 text-amber-700 border-amber-200',
   completed: 'bg-accent/10 text-accent border-accent/30',
+  missed: 'bg-red-50 text-red-700 border-red-200',
 };
 
 const difficultyBadge = {
@@ -53,9 +55,46 @@ export default function Tracker() {
   const topicMap = {};
   allTopics.forEach(t => { topicMap[t.id] = t; });
 
+  const topicsByCourse = {};
+  allTopics.forEach(t => {
+    topicsByCourse[t.course_id] = topicsByCourse[t.course_id] || [];
+    topicsByCourse[t.course_id].push(t);
+  });
+
   const progressByCourse = {};
   activeCourses.forEach(c => {
-    progressByCourse[c.id] = allProgress.filter(p => p.course_id === c.id).sort((a, b) => b.day_number - a.day_number);
+    const courseProgress = allProgress.filter(p => p.course_id === c.id);
+    const isStarted = isCourseStarted(c.start_date);
+    const courseCurrentDay = calculateCourseCurrrentDay(c.start_date);
+
+    // Create entries for missed days
+    const allEntries = [...courseProgress];
+    if (isStarted && courseCurrentDay > 0) {
+      const courseTopics = topicsByCourse[c.id] || [];
+      for (let day = 1; day <= courseCurrentDay; day++) {
+        const hasProgress = courseProgress.some(p => p.day_number === day);
+        if (!hasProgress) {
+          const topic = getTopicForDay(courseTopics, day);
+          if (topic) {
+            allEntries.push({
+              id: `missed-${c.id}-${day}`,
+              course_id: c.id,
+              topic_id: topic.id,
+              week_number: topic.week_number,
+              day_number: day,
+              status: 'missed',
+              hours_studied: 0,
+              difficulty: null,
+              remarks: 'Session missed',
+              submission_date: null,
+              isMissed: true,
+            });
+          }
+        }
+      }
+    }
+
+    progressByCourse[c.id] = allEntries.sort((a, b) => b.day_number - a.day_number);
   });
 
   const toggleCourse = (courseId) => {
@@ -140,16 +179,24 @@ export default function Tracker() {
                     <TableBody>
                       {courseProgress.map(p => {
                         const topic = topicMap[p.topic_id];
+                        const isMissed = p.status === 'missed';
                         return (
-                          <TableRow key={p.id} className="hover:bg-muted/30">
+                          <TableRow key={p.id} className={`hover:bg-muted/30 ${isMissed ? 'bg-red-50/30' : ''}`}>
                             <TableCell className="text-sm">
-                              {p.submission_date ? format(new Date(p.submission_date), 'MMM d') : '-'}
+                              {p.submission_date ? format(new Date(p.submission_date), 'MMM d') : (isMissed ? '-' : '-')}
                             </TableCell>
                             <TableCell className="text-sm">W{p.week_number}</TableCell>
                             <TableCell className="text-sm">D{p.day_number}</TableCell>
-                            <TableCell className="text-sm font-medium">{topic?.topic_name || '-'}</TableCell>
+                            <TableCell className="text-sm font-medium">
+                              {isMissed ? (
+                                <span className="line-through text-muted-foreground">{topic?.topic_name || '-'}</span>
+                              ) : (
+                                topic?.topic_name || '-'
+                              )}
+                            </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={`text-xs ${statusBadge[p.status]}`}>
+                              <Badge variant="outline" className={`text-xs flex items-center gap-1 w-fit ${statusBadge[p.status]}`}>
+                                {isMissed && <AlertCircle className="w-3 h-3" />}
                                 {p.status?.replace(/_/g, ' ')}
                               </Badge>
                             </TableCell>
@@ -162,7 +209,7 @@ export default function Tracker() {
                               )}
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                              {p.remarks || '-'}
+                              {p.remarks || (isMissed ? 'Missed session' : '-')}
                             </TableCell>
                           </TableRow>
                         );

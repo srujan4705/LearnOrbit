@@ -23,6 +23,7 @@ import MyCourses from '@/pages/MyCourses';
 import Tracker from '@/pages/Tracker';
 import RoadmapView from '@/pages/RoadmapView';
 import Revision from '@/pages/Revision';
+import Leaderboard from '@/pages/Leaderboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
           <Route path="/tracker" element={<Tracker />} />
           <Route path="/roadmap" element={<RoadmapView />} />
           <Route path="/revision" element={<Revision />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Route>
       </Route>
 

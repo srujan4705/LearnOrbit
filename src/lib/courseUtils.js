@@ -1,12 +1,21 @@
 import { differenceInCalendarDays } from 'date-fns';
 
-export function calculateCurrentDay(courseStartDate) {
+export function calculateCourseCurrrentDay(courseStartDate) {
   const start = new Date(courseStartDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   start.setHours(0, 0, 0, 0);
   const diff = differenceInCalendarDays(today, start);
-  return diff < 0 ? 0 : diff + 1; // Day 1 is the start date, 0 if course hasn't started
+  return diff < 0 ? 0 : diff + 1; // Returns actual course day (same for all users)
+}
+
+export function calculateUserCurrentDay(userProgress) {
+  if (!userProgress || userProgress.length === 0) {
+    return 1; // New user starts at day 1
+  }
+  // Get the highest day number completed, then next day is current
+  const maxDay = Math.max(...userProgress.map(p => p.day_number || 0));
+  return maxDay + 1;
 }
 
 export function isCourseStarted(courseStartDate) {
