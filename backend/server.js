@@ -143,18 +143,24 @@ const COLUMN_ALIASES = {
   created_date: "created_at",
 };
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://learnorbit.online",
-      "https://www.learnorbit.online",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://learnorbit.online",
+    "https://www.learnorbit.online",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
+app.use((req, res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
+
 app.use(express.json());
 
 function getEntityConfig(entityName) {
@@ -638,10 +644,9 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
 });
 
 app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
-  console.log("===== PATCH REQUEST =====");
-  console.log("Entity:", req.params.entity);
-  console.log("ID:", req.params.id);
-  console.log("Body:", req.body);
+  console.log("PATCH CALLED");
+  console.log(req.params);
+  console.log(req.body);
   const entityName = req.params.entity;
   const config = getEntityConfig(entityName);
 
