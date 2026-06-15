@@ -62,8 +62,14 @@ const COLUMN_ALIASES = {
 
 app.use(
   cors({
-    origin: APP_URL,
+    origin: [
+      "http://localhost:5173",
+      "https://learnorbit.online",
+      "https://www.learnorbit.online"
+    ],
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 app.use(express.json());
