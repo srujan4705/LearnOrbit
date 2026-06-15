@@ -5,7 +5,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 
-import { createPublicUser, requireAdmin, requireAuth, signToken } from "./auth.js";
+import {
+  createPublicUser,
+  requireAdmin,
+  requireAuth,
+  signToken,
+} from "./auth.js";
 import { getClient, query, testConnection } from "./db.js";
 
 dotenv.config();
@@ -13,7 +18,9 @@ dotenv.config();
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
 const APP_URL = process.env.APP_URL || "http://localhost:5173";
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@learnorbit.com").toLowerCase();
+const ADMIN_EMAIL = (
+  process.env.ADMIN_EMAIL || "admin@learnorbit.com"
+).toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
 const ADMIN_NAME = process.env.ADMIN_NAME || "LearnOrbit Admin";
 
@@ -21,36 +28,112 @@ const ENTITY_CONFIG = {
   users: {
     table: "users",
     columns: ["email", "full_name", "role"],
-    selectColumns: ["id", "email", "full_name", "role", "created_at", "updated_at"],
+    selectColumns: [
+      "id",
+      "email",
+      "full_name",
+      "role",
+      "created_at",
+      "updated_at",
+    ],
     defaultOrder: "created_at",
     adminListOnly: true,
     adminWriteOnly: true,
   },
   courses: {
     table: "courses",
-    columns: ["name", "description", "start_date", "end_date", "thumbnail_url", "status"],
-    selectColumns: ["id", "name", "description", "start_date", "end_date", "thumbnail_url", "status", "created_at", "updated_at"],
+    columns: [
+      "name",
+      "description",
+      "start_date",
+      "end_date",
+      "thumbnail_url",
+      "status",
+    ],
+    selectColumns: [
+      "id",
+      "name",
+      "description",
+      "start_date",
+      "end_date",
+      "thumbnail_url",
+      "status",
+      "created_at",
+      "updated_at",
+    ],
     defaultOrder: "created_at",
     adminWriteOnly: true,
   },
   "course-topics": {
     table: "course_topics",
-    columns: ["course_id", "week_number", "day_number", "topic_name", "topic_description", "resource_url", "estimated_hours"],
-    selectColumns: ["id", "course_id", "week_number", "day_number", "topic_name", "topic_description", "resource_url", "estimated_hours", "created_at", "updated_at"],
+    columns: [
+      "course_id",
+      "week_number",
+      "day_number",
+      "topic_name",
+      "topic_description",
+      "resource_url",
+      "estimated_hours",
+    ],
+    selectColumns: [
+      "id",
+      "course_id",
+      "week_number",
+      "day_number",
+      "topic_name",
+      "topic_description",
+      "resource_url",
+      "estimated_hours",
+      "created_at",
+      "updated_at",
+    ],
     defaultOrder: "created_at",
     adminWriteOnly: true,
   },
   enrollments: {
     table: "enrollments",
     columns: ["user_id", "course_id", "enrolled_date", "status"],
-    selectColumns: ["id", "user_id", "course_id", "enrolled_date", "status", "created_at", "updated_at"],
+    selectColumns: [
+      "id",
+      "user_id",
+      "course_id",
+      "enrolled_date",
+      "status",
+      "created_at",
+      "updated_at",
+    ],
     defaultOrder: "created_at",
     scopedToUser: true,
   },
   "user-progress": {
     table: "user_progress",
-    columns: ["user_id", "course_id", "topic_id", "week_number", "day_number", "status", "hours_studied", "difficulty", "remarks", "submission_date"],
-    selectColumns: ["id", "user_id", "course_id", "topic_id", "week_number", "day_number", "status", "hours_studied", "difficulty", "remarks", "submission_date", "created_at", "updated_at"],
+    columns: [
+      "user_id",
+      "course_id",
+      "topic_id",
+      "week_number",
+      "day_number",
+      "status",
+      "hours_studied",
+      "difficulty",
+      "remarks",
+      "submission_date",
+    ],
+    selectColumns: [
+      "id",
+      "user_id",
+      "course_id",
+      "topic_id",
+      "week_number",
+      "day_number",
+      "status",
+      "hours_studied",
+      "difficulty",
+      "remarks",
+      "submission_date",
+      "created_at",
+      "updated_at",
+    ],
     defaultOrder: "created_at",
     scopedToUser: true,
   },
@@ -65,12 +148,12 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://learnorbit.online",
-      "https://www.learnorbit.online"
+      "https://www.learnorbit.online",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 app.use(express.json());
 
@@ -80,7 +163,10 @@ function getEntityConfig(entityName) {
 
 function resolveColumn(config, rawColumn) {
   const column = COLUMN_ALIASES[rawColumn] || rawColumn;
-  return config.selectColumns.includes(column) || config.columns.includes(column) ? column : null;
+  return config.selectColumns.includes(column) ||
+    config.columns.includes(column)
+    ? column
+    : null;
 }
 
 function sanitizePayload(config, payload = {}) {
@@ -122,7 +208,8 @@ function parseOrder(config, orderValue, orderByValue, orderDirValue) {
     column = trimmed.replace(/^[-+]/, "");
   } else if (typeof orderByValue === "string" && orderByValue.trim()) {
     column = orderByValue.trim();
-    direction = String(orderDirValue || "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC";
+    direction =
+      String(orderDirValue || "ASC").toUpperCase() === "DESC" ? "DESC" : "ASC";
   }
 
   const resolvedColumn = resolveColumn(config, column) || config.defaultOrder;
@@ -132,7 +219,7 @@ function parseOrder(config, orderValue, orderByValue, orderDirValue) {
 async function findEntityRow(config, id) {
   const { rows } = await query(
     `SELECT ${config.selectColumns.join(", ")} FROM ${config.table} WHERE id = $1 LIMIT 1`,
-    [id]
+    [id],
   );
   return rows[0] || null;
 }
@@ -162,12 +249,18 @@ function applyScopedAccess(entityName, req, filters) {
 }
 
 async function ensureDatabase() {
-  const schemaSql = fs.readFileSync(new URL("./sql/schema.sql", import.meta.url), "utf8");
+  const schemaSql = fs.readFileSync(
+    new URL("./sql/schema.sql", import.meta.url),
+    "utf8",
+  );
   await query(schemaSql);
 }
 
 async function ensureAdminUser() {
-  const existingAdmin = await query("SELECT id FROM users WHERE email = $1 LIMIT 1", [ADMIN_EMAIL]);
+  const existingAdmin = await query(
+    "SELECT id FROM users WHERE email = $1 LIMIT 1",
+    [ADMIN_EMAIL],
+  );
 
   if (existingAdmin.rows.length > 0) {
     return existingAdmin.rows[0];
@@ -180,14 +273,16 @@ async function ensureAdminUser() {
       VALUES ($1, $2, $3, 'admin')
       RETURNING id
     `,
-    [ADMIN_EMAIL, passwordHash, ADMIN_NAME]
+    [ADMIN_EMAIL, passwordHash, ADMIN_NAME],
   );
 
   return rows[0];
 }
 
 async function ensureSampleData(adminId) {
-  if (String(process.env.SEED_SAMPLE_DATA || "true").toLowerCase() === "false") {
+  if (
+    String(process.env.SEED_SAMPLE_DATA || "true").toLowerCase() === "false"
+  ) {
     return;
   }
 
@@ -206,7 +301,7 @@ async function ensureSampleData(adminId) {
       "Full Stack Web Development",
       "Sample course created automatically so you can test the admin and learner flows.",
       "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
-    ]
+    ],
   );
 
   const courseId = courseRows[0].id;
@@ -219,7 +314,7 @@ async function ensureSampleData(adminId) {
       ($1, 1, 2, 'CSS Basics', 'Core styling concepts, selectors, and layout.', 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics', 2),
       ($1, 1, 3, 'JavaScript Basics', 'Variables, functions, and arrays.', 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/First_steps', 3)
     `,
-    [courseId]
+    [courseId],
   );
 
   await query(
@@ -228,13 +323,15 @@ async function ensureSampleData(adminId) {
       VALUES ($1, $2, CURRENT_DATE, 'active')
       ON CONFLICT (user_id, course_id) DO NOTHING
     `,
-    [adminId, courseId]
+    [adminId, courseId],
   );
 }
 
 function sendError(res, error) {
   if (error.code === "23505") {
-    return res.status(409).json({ message: "A record with the same value already exists" });
+    return res
+      .status(409)
+      .json({ message: "A record with the same value already exists" });
   }
 
   if (error.code === "23503") {
@@ -255,7 +352,9 @@ app.get("/api/health", async (_req, res) => {
 });
 
 app.post("/api/auth/register", async (req, res) => {
-  const email = String(req.body?.email || "").trim().toLowerCase();
+  const email = String(req.body?.email || "")
+    .trim()
+    .toLowerCase();
   const password = String(req.body?.password || "");
   const fullName = String(req.body?.full_name || "").trim() || null;
 
@@ -264,7 +363,9 @@ app.post("/api/auth/register", async (req, res) => {
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters" });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters" });
   }
 
   try {
@@ -275,7 +376,7 @@ app.post("/api/auth/register", async (req, res) => {
         VALUES ($1, $2, $3, 'learner')
         RETURNING id, email, full_name, role, created_at, updated_at
       `,
-      [email, passwordHash, fullName]
+      [email, passwordHash, fullName],
     );
 
     const user = rows[0];
@@ -290,7 +391,9 @@ app.post("/api/auth/register", async (req, res) => {
 });
 
 app.post("/api/auth/login", async (req, res) => {
-  const email = String(req.body?.email || "").trim().toLowerCase();
+  const email = String(req.body?.email || "")
+    .trim()
+    .toLowerCase();
   const password = String(req.body?.password || "");
 
   if (!email || !password) {
@@ -298,7 +401,10 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   try {
-    const { rows } = await query("SELECT * FROM users WHERE email = $1 LIMIT 1", [email]);
+    const { rows } = await query(
+      "SELECT * FROM users WHERE email = $1 LIMIT 1",
+      [email],
+    );
     const user = rows[0];
 
     if (!user) {
@@ -324,7 +430,7 @@ app.get("/api/auth/me", requireAuth, async (req, res) => {
   try {
     const { rows } = await query(
       "SELECT id, email, full_name, role, created_at, updated_at FROM users WHERE id = $1 LIMIT 1",
-      [req.user.id]
+      [req.user.id],
     );
 
     if (!rows[0]) {
@@ -338,14 +444,19 @@ app.get("/api/auth/me", requireAuth, async (req, res) => {
 });
 
 app.post("/api/auth/reset-password-request", async (req, res) => {
-  const email = String(req.body?.email || "").trim().toLowerCase();
+  const email = String(req.body?.email || "")
+    .trim()
+    .toLowerCase();
 
   if (!email) {
     return res.status(400).json({ message: "Email is required" });
   }
 
   try {
-    const { rows } = await query("SELECT id, email FROM users WHERE email = $1 LIMIT 1", [email]);
+    const { rows } = await query(
+      "SELECT id, email FROM users WHERE email = $1 LIMIT 1",
+      [email],
+    );
     const user = rows[0];
 
     if (user) {
@@ -355,10 +466,12 @@ app.post("/api/auth/reset-password-request", async (req, res) => {
           INSERT INTO password_reset_tokens (user_id, token, expires_at)
           VALUES ($1, $2, NOW() + INTERVAL '1 hour')
         `,
-        [user.id, resetToken]
+        [user.id, resetToken],
       );
 
-      console.log(`Password reset link for ${user.email}: ${APP_URL}/reset-password?token=${resetToken}`);
+      console.log(
+        `Password reset link for ${user.email}: ${APP_URL}/reset-password?token=${resetToken}`,
+      );
     }
 
     return res.json({ ok: true });
@@ -372,11 +485,15 @@ app.post("/api/auth/reset-password", async (req, res) => {
   const newPassword = String(req.body?.newPassword || "");
 
   if (!resetToken || !newPassword) {
-    return res.status(400).json({ message: "Reset token and new password are required" });
+    return res
+      .status(400)
+      .json({ message: "Reset token and new password are required" });
   }
 
   if (newPassword.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters" });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters" });
   }
 
   const client = await getClient();
@@ -393,23 +510,25 @@ app.post("/api/auth/reset-password", async (req, res) => {
           AND expires_at > NOW()
         LIMIT 1
       `,
-      [resetToken]
+      [resetToken],
     );
 
     const resetRow = tokenResult.rows[0];
     if (!resetRow) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ message: "Invalid or expired reset token" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await client.query(
       "UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2",
-      [passwordHash, resetRow.user_id]
+      [passwordHash, resetRow.user_id],
     );
     await client.query(
       "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1",
-      [resetRow.id]
+      [resetRow.id],
     );
 
     await client.query("COMMIT");
@@ -435,7 +554,12 @@ app.get("/api/entities/:entity", requireAuth, async (req, res) => {
 
   try {
     const filters = buildFilters(config, scope.filters);
-    const { column, direction } = parseOrder(config, req.query.order, req.query.orderBy, req.query.orderDir);
+    const { column, direction } = parseOrder(
+      config,
+      req.query.order,
+      req.query.orderBy,
+      req.query.orderDir,
+    );
     const limit = Math.min(Number(req.query.limit || 1000), 1000);
     const offset = Math.max(Number(req.query.offset || 0), 0);
 
@@ -484,7 +608,9 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
   }
 
   if (entityName === "users") {
-    return res.status(403).json({ message: "Use the auth endpoints to create users" });
+    return res
+      .status(403)
+      .json({ message: "Use the auth endpoints to create users" });
   }
 
   if (Object.keys(payload).length === 0) {
@@ -502,7 +628,7 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
         VALUES (${placeholders.join(", ")})
         RETURNING ${config.selectColumns.join(", ")}
       `,
-      values
+      values,
     );
 
     return res.status(201).json(rows[0]);
@@ -512,6 +638,10 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
 });
 
 app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
+  console.log("===== PATCH REQUEST =====");
+  console.log("Entity:", req.params.entity);
+  console.log("ID:", req.params.id);
+  console.log("Body:", req.body);
   const entityName = req.params.entity;
   const config = getEntityConfig(entityName);
 
@@ -529,7 +659,11 @@ app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Record not found" });
     }
 
-    if (config.scopedToUser && req.user.role !== "admin" && existing.user_id !== req.user.id) {
+    if (
+      config.scopedToUser &&
+      req.user.role !== "admin" &&
+      existing.user_id !== req.user.id
+    ) {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -539,13 +673,19 @@ app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
     }
 
     const columns = Object.keys(payload);
+    console.log("Columns:", columns);
+    console.log("Payload:", payload);
     if (columns.length === 0) {
       return res.status(400).json({ message: "No valid fields were provided" });
     }
 
-    const assignments = columns.map((column, index) => `${column} = $${index + 1}`);
+    const assignments = columns.map(
+      (column, index) => `${column} = $${index + 1}`,
+    );
     const values = columns.map((column) => payload[column]);
     values.push(req.params.id);
+    console.log("Assignments:", assignments);
+    console.log("Values:", values);
 
     const { rows } = await query(
       `
@@ -554,11 +694,13 @@ app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
         WHERE id = $${values.length}
         RETURNING ${config.selectColumns.join(", ")}
       `,
-      values
+      values,
     );
 
     return res.json(rows[0]);
   } catch (error) {
+    console.error("PATCH ERROR");
+    console.error(error);
     return sendError(res, error);
   }
 });
@@ -581,7 +723,11 @@ app.delete("/api/entities/:entity/:id", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Record not found" });
     }
 
-    if (config.scopedToUser && req.user.role !== "admin" && existing.user_id !== req.user.id) {
+    if (
+      config.scopedToUser &&
+      req.user.role !== "admin" &&
+      existing.user_id !== req.user.id
+    ) {
       return res.status(403).json({ message: "Access denied" });
     }
 
