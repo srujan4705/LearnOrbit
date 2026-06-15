@@ -643,7 +643,7 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
   }
 });
 
-app.patch("/api/entities/:entity/:id", requireAuth, async (req, res) => {
+app.put("/api/entities/:entity/:id", requireAuth, async (req, res) => {
   console.log("PATCH CALLED");
   console.log(req.params);
   console.log(req.body);

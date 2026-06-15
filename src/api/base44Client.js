@@ -90,7 +90,7 @@ function createEntityClient(route) {
     },
     async update(id, payload) {
       return request(`/entities/${route}/${id}`, {
-        method: "PATCH",
+        method: "PUT",
         body: payload,
       });
     },
