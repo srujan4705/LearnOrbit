@@ -138,14 +138,14 @@ export default function Tracker() {
       </div>
 
       <div className="space-y-3">
-        {activeCourses.map(course => {
+        {activeCourses.map((course, index) => {
           const courseProgress = progressByCourse[course.id] || [];
           const isExpanded = expandedCourses[course.id] ?? true;
 
           if (courseProgress.length === 0) return null;
 
           return (
-            <Card key={course.id}>
+            <Card key={course.id} className="hover-lift animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
               <div
                 className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition"
                 onClick={() => toggleCourse(course.id)}

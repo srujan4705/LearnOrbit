@@ -13,12 +13,12 @@ export default function TopBar({ onMenuClick }) {
     : 'U';
 
   return (
-    <header className="h-16 border-b border-border bg-card/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-16 border-b border-border bg-card/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="md:hidden text-muted-foreground" onClick={onMenuClick}>
+        <Button variant="ghost" size="icon" className="md:hidden text-muted-foreground hover:bg-muted/50 transition-all" onClick={onMenuClick}>
           <Menu className="w-5 h-5" />
         </Button>
-        <div>
+        <div className="animate-fade-in">
           <div className="flex items-center gap-2">
             <p className="font-heading font-semibold text-foreground">
               {user?.full_name || user?.email || 'User'}
@@ -32,10 +32,10 @@ export default function TopBar({ onMenuClick }) {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="text-muted-foreground">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
           <Bell className="w-5 h-5" />
         </Button>
-        <Avatar className="h-9 w-9 border-2 border-primary/20">
+        <Avatar className="h-9 w-9 border-2 border-primary/20 hover:border-primary/40 transition-all hover:scale-105">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
             {initials}
           </AvatarFallback>

@@ -79,10 +79,11 @@ export default function MyCourses() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {enrolledCourses.map(item => (
+          {enrolledCourses.map((item, index) => (
             <Card
               key={item.id}
-              className="hover:shadow-lg transition-shadow overflow-hidden cursor-pointer"
+              className="hover-lift overflow-hidden cursor-pointer animate-fade-in-up"
+              style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => navigate(`/course/${item.course_id}`)}
             >
               {item.course.thumbnail_url ? (

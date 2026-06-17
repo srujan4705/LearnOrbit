@@ -106,8 +106,8 @@ export default function RoadmapView() {
                 </div>
 
                 <div className="space-y-6">
-                  {sortedWeeks.map(([weekNum, weekTopics]) => (
-                    <Card key={weekNum}>
+                  {sortedWeeks.map(([weekNum, weekTopics], weekIndex) => (
+            <Card key={weekNum} className="hover-lift animate-fade-in-up" style={{ animationDelay: `${weekIndex * 100}ms` }}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">Week {weekNum}</CardTitle>
                       </CardHeader>

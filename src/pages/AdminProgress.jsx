@@ -87,7 +87,7 @@ export default function AdminProgress() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="hover-lift animate-fade-in-up">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>

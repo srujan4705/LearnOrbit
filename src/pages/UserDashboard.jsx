@@ -35,7 +35,7 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
   const currentWeek = isStarted ? Math.ceil(courseCurrentDay / 7) : 0;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden hover-lift animate-fade-in-up">
       <CardContent className="p-6 space-y-5">
         <div>
           <h3 className="font-semibold text-lg">{course.name}</h3>
@@ -183,7 +183,7 @@ export default function UserDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {activeCourses.map((course) => (
+        {activeCourses.map((course, index) => (
           <CourseCard
             key={course.id}
             course={course}
@@ -191,6 +191,7 @@ export default function UserDashboard() {
             progress={progressByCourse[course.id] || []}
             user={user}
             queryClient={queryClient}
+            index={index}
           />
         ))}
       </div>

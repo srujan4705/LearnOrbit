@@ -151,8 +151,8 @@ export default function CourseManagement() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.map(course => (
-            <Card key={course.id} className="hover:shadow-lg transition-shadow overflow-hidden group">
+          {courses.map((course, index) => (
+            <Card key={course.id} className="hover-lift overflow-hidden group animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
               {course.thumbnail_url && (
                 <div className="h-36 overflow-hidden">
                   <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

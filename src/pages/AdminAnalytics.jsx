@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, TrendingUp, Clock, Users, BookOpen } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 export default function AdminAnalytics() {
@@ -141,7 +141,7 @@ export default function AdminAnalytics() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
+            <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '50ms' }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               </CardHeader>
@@ -151,7 +151,7 @@ export default function AdminAnalytics() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '100ms' }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
               </CardHeader>
@@ -163,7 +163,7 @@ export default function AdminAnalytics() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '150ms' }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Active Days</CardTitle>
               </CardHeader>
@@ -173,7 +173,7 @@ export default function AdminAnalytics() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
               </CardHeader>
@@ -187,7 +187,7 @@ export default function AdminAnalytics() {
 
         {/* Daily Activity Tab */}
         <TabsContent value="daily" className="space-y-4">
-          <Card>
+          <Card className="hover-lift animate-fade-in-up">
             <CardHeader>
               <CardTitle>Daily Activity Trend</CardTitle>
             </CardHeader>
@@ -224,7 +224,7 @@ export default function AdminAnalytics() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-4">
-          <Card>
+          <Card className="hover-lift animate-fade-in-up">
             <CardHeader>
               <CardTitle>User Learning Activity</CardTitle>
             </CardHeader>
@@ -241,7 +241,7 @@ export default function AdminAnalytics() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedUsers.map(userData => (
+                    {sortedUsers.map((userData, index) => (
                       <TableRow key={userData.user?.id}>
                         <TableCell className="font-medium">{userData.user?.full_name || 'N/A'}</TableCell>
                         <TableCell className="text-sm">{userData.user?.email}</TableCell>
@@ -270,10 +270,11 @@ export default function AdminAnalytics() {
         {/* Courses Tab */}
         <TabsContent value="courses" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.values(courseAnalytics).map(courseData => (
+            {Object.values(courseAnalytics).map((courseData, index) => (
               <Card
                 key={courseData.course?.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover-lift animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => setSelectedCourse(courseData.course?.id)}
               >
                 <CardHeader className="pb-3">

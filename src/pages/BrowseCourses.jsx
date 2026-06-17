@@ -54,10 +54,10 @@ export default function BrowseCourses() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {courses.map(course => {
+          {courses.map((course, index) => {
             const isEnrolled = enrolledCourseIds.includes(course.id);
             return (
-              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+              <Card key={course.id} className="overflow-hidden hover-lift group animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                 {course.thumbnail_url ? (
                   <div className="h-40 overflow-hidden">
                     <img src={course.thumbnail_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

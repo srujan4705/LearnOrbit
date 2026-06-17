@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           <CardHeader>
             <CardTitle className="text-base">Daily Submissions (7 days)</CardTitle>
           </CardHeader>
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '200ms' }}>
           <CardHeader>
             <CardTitle className="text-base">Difficulty Distribution</CardTitle>
           </CardHeader>
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '300ms' }}>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-destructive" />

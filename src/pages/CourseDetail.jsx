@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, Loader2, ChevronLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { calculateUserCurrentDay } from '@/lib/courseUtils';
 import {
   Dialog,
@@ -218,8 +218,8 @@ export default function CourseDetail() {
       <div className="space-y-6">
         {Object.entries(weeks)
           .sort((a, b) => Number(a[0]) - Number(b[0]))
-          .map(([weekNum, weekTopics]) => (
-            <Card key={weekNum}>
+          .map(([weekNum, weekTopics], weekIndex) => (
+            <Card key={weekNum} className="hover-lift animate-fade-in-up" style={{ animationDelay: `${weekIndex * 100}ms` }}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Week {weekNum}</CardTitle>
               </CardHeader>

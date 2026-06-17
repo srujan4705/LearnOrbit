@@ -100,7 +100,7 @@ export default function Leaderboard() {
           {leaderboardData.slice(0, 3).length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {leaderboardData.slice(0, 3).map((item, index) => (
-                <Card key={item.id} className={index === 0 ? 'border-2 border-amber-400' : ''}>
+                <Card key={item.id} className={`${index === 0 ? 'border-2 border-amber-400' : ''} hover-lift animate-fade-in-up`} style={{ animationDelay: `${index * 100}ms` }}>
                   <CardContent className="p-6 text-center">
                     <div className="flex justify-center mb-3">
                       {index === 0 && <Trophy className="w-8 h-8 text-amber-500" />}
@@ -125,7 +125,7 @@ export default function Leaderboard() {
           )}
 
           {/* Full leaderboard table */}
-          <Card>
+          <Card className="hover-lift animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Complete Rankings</CardTitle>
             </CardHeader>

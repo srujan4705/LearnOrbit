@@ -87,8 +87,8 @@ export default function Revision() {
                   <h3 className="font-semibold text-sm text-muted-foreground">{course.name}</h3>
                   <Badge variant="outline" className="text-xs">{topics.length}</Badge>
                 </div>
-                {topics.map(({ topic, count }) => (
-                  <Card key={topic.id} className="hover:shadow-md transition-shadow">
+                {topics.map(({ topic, count }, topicIndex) => (
+                  <Card key={topic.id} className="hover-lift animate-fade-in-up" style={{ animationDelay: `${topicIndex * 50}ms` }}>
                     <CardContent className="p-5 flex items-center gap-4">
                       <div className="p-2.5 rounded-xl bg-destructive/10 shrink-0">
                         <AlertTriangle className="w-5 h-5 text-destructive" />
