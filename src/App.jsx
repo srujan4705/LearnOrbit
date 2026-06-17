@@ -18,8 +18,10 @@ import Home from '@/pages/Home';
 import CourseManagement from '@/pages/CourseManagement';
 import RoadmapBuilder from '@/pages/RoadmapBuilder';
 import AdminProgress from '@/pages/AdminProgress';
+import AdminAnalytics from '@/pages/AdminAnalytics';
 import BrowseCourses from '@/pages/BrowseCourses';
 import MyCourses from '@/pages/MyCourses';
+import CourseDetail from '@/pages/CourseDetail';
 import Tracker from '@/pages/Tracker';
 import RoadmapView from '@/pages/RoadmapView';
 import Revision from '@/pages/Revision';
@@ -58,9 +60,10 @@ const AuthenticatedApp = () => {
           <Route path="/courses" element={<AdminRoute><CourseManagement /></AdminRoute>} />
           <Route path="/roadmap-builder/:courseId" element={<AdminRoute><RoadmapBuilder /></AdminRoute>} />
           <Route path="/admin/progress" element={<AdminRoute><AdminProgress /></AdminRoute>} />
-          <Route path="/admin/analytics" element={<AdminRoute><Home /></AdminRoute>} />
+          <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
           <Route path="/browse-courses" element={<BrowseCourses />} />
           <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/course/:courseId" element={<CourseDetail />} />
           <Route path="/tracker" element={<Tracker />} />
           <Route path="/roadmap" element={<RoadmapView />} />
           <Route path="/revision" element={<Revision />} />

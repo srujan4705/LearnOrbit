@@ -82,6 +82,10 @@ function createEntityClient(route) {
     async filter(filters = {}) {
       return request(`/entities/${route}${buildQuery(filters)}`);
     },
+    async get(id) {
+      const allItems = await this.filter();
+      return allItems.find(item => item.id === id);
+    },
     async create(payload) {
       return request(`/entities/${route}`, {
         method: "POST",

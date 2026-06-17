@@ -6,12 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { BookOpen, Calendar, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { calculateCourseCurrentDay, getCompletionPercentage } from '@/lib/courseUtils';
+import { calculateUserCurrentDay, getCompletionPercentage } from '@/lib/courseUtils';
 
 export default function MyCourses() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ['enrollments', user?.id],
@@ -46,11 +47,11 @@ export default function MyCourses() {
   const enrolledCourses = enrollments.map(e => {
     const course = courseMap[e.course_id];
     if (!course) return null;
-    const courseProgress = allProgress.filter(p => p.course_id === e.course_id);
-    const completed = courseProgress.filter(p => p.status === 'completed').length;
+    const courseProgress = allProgress.filter(p => p.course_id === e.course_id && p.status === 'completed');
+    const completed = courseProgress.length;
     const total = topicsByCourse[e.course_id] || 0;
     const pct = getCompletionPercentage(total, completed);
-    const day = calculateCourseCurrentDay(course.start_date);
+    const day = calculateUserCurrentDay(courseProgress);
     return { ...e, course, completion: pct, completed, total, currentDay: day };
   }).filter(Boolean);
 
@@ -79,7 +80,11 @@ export default function MyCourses() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {enrolledCourses.map(item => (
-            <Card key={item.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+            <Card
+              key={item.id}
+              className="hover:shadow-lg transition-shadow overflow-hidden cursor-pointer"
+              onClick={() => navigate(`/course/${item.course_id}`)}
+            >
               {item.course.thumbnail_url ? (
                 <div className="h-32 overflow-hidden">
                   <img src={item.course.thumbnail_url} alt="" className="w-full h-full object-cover" />

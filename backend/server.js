@@ -147,7 +147,7 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -633,9 +633,6 @@ app.post("/api/entities/:entity", requireAuth, async (req, res) => {
 });
 
 app.put("/api/entities/:entity/:id", requireAuth, async (req, res) => {
-  console.log("PATCH CALLED");
-  console.log(req.params);
-  console.log(req.body);
   const entityName = req.params.entity;
   const config = getEntityConfig(entityName);
 
@@ -667,8 +664,7 @@ app.put("/api/entities/:entity/:id", requireAuth, async (req, res) => {
     }
 
     const columns = Object.keys(payload);
-    console.log("Columns:", columns);
-    console.log("Payload:", payload);
+
     if (columns.length === 0) {
       return res.status(400).json({ message: "No valid fields were provided" });
     }
@@ -678,8 +674,6 @@ app.put("/api/entities/:entity/:id", requireAuth, async (req, res) => {
     );
     const values = columns.map((column) => payload[column]);
     values.push(req.params.id);
-    console.log("Assignments:", assignments);
-    console.log("Values:", values);
 
     const { rows } = await query(
       `

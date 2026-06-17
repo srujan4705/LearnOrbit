@@ -18,6 +18,15 @@ export function calculateUserCurrentDay(userProgress) {
   return maxDay + 1;
 }
 
+export function calculateUserDayFromEnrollment(enrollmentDate) {
+  const enrolled = new Date(enrollmentDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  enrolled.setHours(0, 0, 0, 0);
+  const diff = differenceInCalendarDays(today, enrolled);
+  return diff < 0 ? 0 : diff + 1; // User's day 1 starts from enrollment date
+}
+
 export function isCourseStarted(courseStartDate) {
   const start = new Date(courseStartDate);
   const today = new Date();

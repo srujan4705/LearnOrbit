@@ -2,15 +2,16 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { calculateCourseCurrentDay, getTopicForDay, isCourseStarted } from '@/lib/courseUtils';
+import { calculateUserCurrentDay, getTopicForDay } from '@/lib/courseUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle, Play, ExternalLink, Map, Loader2, Lock, Clock } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { format } from 'date-fns';
+import { CheckCircle2, Circle, Play, ExternalLink, Map, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function RoadmapView() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: enrollments = [] } = useQuery({
     queryKey: ['enrollments', user?.id],
@@ -51,9 +52,9 @@ export default function RoadmapView() {
 
   const getCourseRoadmap = (course) => {
     const topics = topicsByCourse[course.id] || [];
-    const courseCurrentDay = calculateCourseCurrentDay(course.start_date);
-    const isStarted = isCourseStarted(course.start_date);
-    const currentTopic = isStarted && courseCurrentDay > 0 ? getTopicForDay(topics, courseCurrentDay) : null;
+    const courseProgress = progress.filter(p => p.course_id === course.id && p.status === 'completed');
+    const userCurrentDay = calculateUserCurrentDay(courseProgress);
+    const currentTopic = userCurrentDay > 0 ? getTopicForDay(topics, userCurrentDay) : null;
 
     const sortedTopics = [...topics].sort((a, b) => {
       if (a.week_number !== b.week_number) return a.week_number - b.week_number;
@@ -66,7 +67,7 @@ export default function RoadmapView() {
       weeks[t.week_number].push(t);
     });
 
-    return { weeks, currentTopic, currentDay: courseCurrentDay, isStarted };
+    return { weeks, currentTopic, currentDay: userCurrentDay };
   };
 
   if (courseIds.length === 0) {
@@ -74,7 +75,8 @@ export default function RoadmapView() {
       <div className="max-w-2xl mx-auto text-center py-20">
         <Map className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
         <h2 className="text-2xl font-heading font-bold mb-2">No Active Courses</h2>
-        <p className="text-muted-foreground">Enroll in a course to see the roadmap.</p>
+        <p className="text-muted-foreground mb-4">Enroll in a course to see the roadmap.</p>
+        <Button onClick={() => navigate('/browse-courses')}>Browse Courses</Button>
       </div>
     );
   }
@@ -91,33 +93,17 @@ export default function RoadmapView() {
       ) : (
         <div className="space-y-8">
           {courses.map(course => {
-            const { weeks, currentTopic, currentDay, isStarted } = getCourseRoadmap(course);
+            const { weeks, currentTopic, currentDay } = getCourseRoadmap(course);
             const sortedWeeks = Object.entries(weeks).sort((a, b) => Number(a[0]) - Number(b[0]));
 
             return (
               <div key={course.id} className="space-y-4">
                 <div>
                   <h2 className="text-xl font-semibold">{course.name}</h2>
-                  {!isStarted ? (
-                    <p className="text-sm text-amber-600 mt-1 flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      Starts on {format(new Date(course.start_date), 'MMMM d, yyyy')}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Week {Math.ceil(currentDay / 7)} · Day {currentDay}
-                    </p>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Week {Math.ceil(currentDay / 7)} · Day {currentDay}
+                  </p>
                 </div>
-
-                {!isStarted && (
-                  <Alert className="bg-amber-50 border-amber-200">
-                    <Clock className="h-4 w-4 text-amber-600" />
-                    <AlertDescription className="text-sm text-amber-800">
-                      This course starts on {format(new Date(course.start_date), 'MMMM d, yyyy')}
-                    </AlertDescription>
-                  </Alert>
-                )}
 
                 <div className="space-y-6">
                   {sortedWeeks.map(([weekNum, weekTopics]) => (
@@ -129,20 +115,16 @@ export default function RoadmapView() {
                         {weekTopics.map((topic) => {
                           const isCompleted = completedTopicIds.has(topic.id);
                           const isCurrent = currentTopic?.id === topic.id;
-                          const isLocked = !isStarted;
 
                           return (
                             <div
                               key={topic.id}
                               className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                                isLocked ? 'opacity-50 cursor-not-allowed' :
                                 isCurrent ? 'bg-primary/5 border border-primary/20' :
                                 isCompleted ? 'bg-accent/5' : 'hover:bg-muted/50'
                               }`}
                             >
-                              {isLocked ? (
-                                <Lock className="w-5 h-5 text-muted-foreground/40 shrink-0" />
-                              ) : isCompleted ? (
+                              {isCompleted ? (
                                 <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
                               ) : isCurrent ? (
                                 <Play className="w-5 h-5 text-primary shrink-0 fill-primary" />
@@ -151,7 +133,6 @@ export default function RoadmapView() {
                               )}
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium ${
-                                  isLocked ? 'text-muted-foreground' :
                                   isCompleted ? 'text-accent' :
                                   isCurrent ? 'text-primary' : 'text-foreground/70'
                                 }`}>
@@ -163,7 +144,7 @@ export default function RoadmapView() {
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 <Badge variant="outline" className="text-xs">{topic.estimated_hours || 1}h</Badge>
-                                {!isLocked && topic.resource_url && (
+                                {topic.resource_url && (
                                   <a href={topic.resource_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
                                     <ExternalLink className="w-4 h-4" />
                                   </a>
