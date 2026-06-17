@@ -26,13 +26,13 @@ export default function MyCourses() {
   });
 
   const { data: allProgress = [] } = useQuery({
-    queryKey: ['my-progress', user?.id],
+    queryKey: ['user-progress', user?.id],
     queryFn: () => base44.entities.UserProgress.filter({ user_id: user.id }),
     enabled: !!user?.id,
   });
 
   const { data: allTopics = [] } = useQuery({
-    queryKey: ['all-topics-user'],
+    queryKey: ['all-topics'],
     queryFn: () => base44.entities.CourseTopic.list('-created_date', 500),
   });
 

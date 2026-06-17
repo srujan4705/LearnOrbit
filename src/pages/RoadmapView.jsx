@@ -29,13 +29,12 @@ export default function RoadmapView() {
   const courses = allCourses.filter(c => courseIds.includes(c.id));
 
   const { data: allTopics = [], isLoading: topicsLoading } = useQuery({
-    queryKey: ['all-topics-roadmap', courseIds],
+    queryKey: ['all-topics'],
     queryFn: () => base44.entities.CourseTopic.list('-created_date', 500),
-    enabled: courseIds.length > 0,
   });
 
   const { data: progress = [] } = useQuery({
-    queryKey: ['user-progress-roadmap', user?.id],
+    queryKey: ['user-progress', user?.id],
     queryFn: () => base44.entities.UserProgress.filter({ user_id: user.id }),
     enabled: !!user?.id,
   });

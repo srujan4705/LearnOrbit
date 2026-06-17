@@ -90,9 +90,9 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
             currentDay={courseCurrentDay}
             existingProgress={todayProgress}
             userId={user.id}
-            onProgressSubmitted={() =>
-              queryClient.invalidateQueries({ queryKey: ["user-progress"] })
-            }
+            onProgressSubmitted={() => {
+              queryClient.invalidateQueries({ queryKey: ["user-progress", user.id] });
+            }}
           />
         ) : !isStarted ? (
           <Alert className="bg-amber-50 border-amber-200">

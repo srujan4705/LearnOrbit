@@ -113,6 +113,7 @@ export default function CourseDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['progress', user?.id, courseId]);
+      queryClient.invalidateQueries(['user-progress', user?.id]);
       setDialogOpen(false);
       setFormData({ status: 'not_started', hours_studied: '', difficulty: '', remarks: '' });
       setSelectedTopic(null);
