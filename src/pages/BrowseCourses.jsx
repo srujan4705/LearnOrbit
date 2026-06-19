@@ -1,10 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, BookOpen, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calendar, BookOpen, CheckCircle2, Loader2, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 
@@ -38,9 +39,17 @@ export default function BrowseCourses() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-heading font-bold">Browse Courses</h1>
-        <p className="text-muted-foreground text-sm mt-1">Find and join available learning programs</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold">Browse Courses</h1>
+          <p className="text-muted-foreground text-sm mt-1">Find and join available learning programs</p>
+        </div>
+        <Link to="/leaderboard">
+          <Button variant="outline" className="gap-2">
+            <Trophy className="w-4 h-4" />
+            Leaderboard
+          </Button>
+        </Link>
       </div>
 
       {isLoading ? (

@@ -114,6 +114,9 @@ const entities = Object.fromEntries(
 );
 
 export const base44 = {
+  async getLeaderboard() {
+    return request("/leaderboard");
+  },
   auth: {
     async loginViaEmailPassword(email, password) {
       const result = await request("/auth/login", {

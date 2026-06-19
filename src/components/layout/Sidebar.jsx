@@ -13,6 +13,7 @@ import {
   GraduationCap,
   ChevronLeft,
   Menu,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -22,6 +23,7 @@ const adminLinks = [
   { to: "/courses", label: "Courses", icon: BookOpen },
   { to: "/admin/progress", label: "Learner Progress", icon: Users },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 
 const userLinks = [
@@ -31,6 +33,7 @@ const userLinks = [
   { to: "/roadmap", label: "Roadmap", icon: Map },
   { to: "/revision", label: "Revision", icon: RotateCcw },
   { to: "/browse-courses", label: "Browse Courses", icon: GraduationCap },
+  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed }) {

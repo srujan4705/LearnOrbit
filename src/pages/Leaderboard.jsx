@@ -1,86 +1,44 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy, Flame, Loader2, Users } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Trophy, Flame, Loader2, Users } from "lucide-react";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 
 export default function Leaderboard() {
-  const { data: allProgress = [], isLoading: progressLoading } = useQuery({
-    queryKey: ['all-progress-leaderboard'],
-    queryFn: () => base44.entities.UserProgress.list('-created_date', 1000),
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["leaderboard"],
+    queryFn: () => base44.getLeaderboard(),
   });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ['all-users-leaderboard'],
-    queryFn: () => base44.entities.User.list(),
-  });
+  const leaderboardData = apiData?.leaderboardData || [];
+  const currentUserRank = apiData?.currentUserRank;
 
-  const { data: enrollments = [] } = useQuery({
-    queryKey: ['all-enrollments-leaderboard'],
-    queryFn: () => base44.entities.Enrollment.list(),
-  });
-
-  const { data: courses = [] } = useQuery({
-    queryKey: ['courses-leaderboard'],
-    queryFn: () => base44.entities.Course.list(),
-  });
-
-  const userMap = {};
-  users.forEach(u => { userMap[u.id] = u; });
-
-  const courseMap = {};
-  courses.forEach(c => { courseMap[c.id] = c; });
-
-  // Calculate current week dates
+  // Calculate current week dates for display
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
 
-  // Filter progress for current week
-  const currentWeekProgress = allProgress.filter(p => {
-    const submissionDate = new Date(p.submission_date);
-    return isWithinInterval(submissionDate, { start: weekStart, end: weekEnd });
-  });
-
-  // Build leaderboard data
-  const leaderboardData = enrollments
-    .filter(e => e.status === 'active')
-    .map(enrollment => {
-      const user = userMap[enrollment.user_id];
-      const course = courseMap[enrollment.course_id];
-      const userWeekProgress = currentWeekProgress.filter(
-        p => p.user_id === enrollment.user_id && p.course_id === enrollment.course_id
-      );
-      const totalHours = userWeekProgress.reduce(
-        (sum, p) => sum + Number(p.hours_studied || 0),
-        0
-      );
-      return {
-        id: enrollment.id,
-        userName: user?.full_name || user?.email || 'Unknown',
-        courseName: course?.name || 'Unknown',
-        hours: totalHours,
-        entries: userWeekProgress.length,
-      };
-    })
-    .filter(item => item.hours > 0) // Only show users with hours this week
-    .sort((a, b) => b.hours - a.hours); // Sort by hours descending
-
-  const isLoading = progressLoading;
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-amber-500" />
-          Weekly Leaderboard
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Top learners this week · {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <Trophy className="w-6 h-6 text-amber-500" />
+            Weekly Leaderboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Top learners this week · {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+          </p>
+        </div>
+        {currentUserRank && (
+          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+            <p className="text-sm text-muted-foreground">Your Rank</p>
+            <p className="text-2xl font-bold text-primary">#{currentUserRank}</p>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -91,7 +49,7 @@ export default function Leaderboard() {
         <Card className="border-dashed">
           <CardContent className="p-12 text-center">
             <Users className="w-12 h-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground">No activity this week yet.</p>
+            <p className="text-muted-foreground">No enrolled users yet.</p>
           </CardContent>
         </Card>
       ) : (

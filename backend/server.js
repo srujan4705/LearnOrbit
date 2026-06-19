@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
 
 import {
   createPublicUser,
@@ -23,6 +25,36 @@ const ADMIN_EMAIL = (
 ).toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123";
 const ADMIN_NAME = process.env.ADMIN_NAME || "LearnOrbit Admin";
+
+// Swagger configuration
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: "3.0.0",
+    info: {
+      title: "LearnOrbit API",
+      version: "1.0.0",
+      description: "API documentation for LearnOrbit - a learning platform",
+    },
+    servers: [
+      {
+        url: `http://localhost:${PORT}`,
+        description: "Development server",
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+  },
+  apis: ["./backend/server.js"], // Path to the API docs
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 const ENTITY_CONFIG = {
   users: {
@@ -151,6 +183,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Swagger UI endpoint
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 function getEntityConfig(entityName) {
   return ENTITY_CONFIG[entityName];
@@ -337,6 +372,23 @@ function sendError(res, error) {
   return res.status(500).json({ message: "Internal server error" });
 }
 
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Check if the server is running and connected to the database
+ *     responses:
+ *       200:
+ *         description: Server is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ */
 app.get("/api/health", async (_req, res) => {
   try {
     await testConnection();
@@ -346,6 +398,160 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/leaderboard:
+ *   get:
+ *     summary: Get weekly leaderboard
+ *     description: Retrieve the weekly leaderboard with ranks, hours studied, and current user's rank
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Leaderboard data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 leaderboardData:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       userId:
+ *                         type: number
+ *                       userName:
+ *                         type: string
+ *                       courseName:
+ *                         type: string
+ *                       hours:
+ *                         type: number
+ *                       entries:
+ *                         type: number
+ *                 currentUserRank:
+ *                   type: number
+ *                   nullable: true
+ *       401:
+ *         description: Unauthorized
+ */
+app.get("/api/leaderboard", requireAuth, async (req, res) => {
+  try {
+    // Use date-fns logic for week start/end (consistent with frontend)
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay()); // Sunday as week start
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    // Get all enrollments (active and maybe others?)
+    const { rows: enrollments } = await query(
+      `SELECT id, user_id, course_id FROM enrollments`
+    );
+
+    // Get all users
+    const { rows: users } = await query(
+      `SELECT id, email, full_name FROM users`
+    );
+
+    // Get all courses
+    const { rows: courses } = await query(
+      `SELECT id, name FROM courses`
+    );
+
+    // Get current week progress (unfiltered)
+    const { rows: progress } = await query(
+      `SELECT user_id, course_id, hours_studied, submission_date 
+       FROM user_progress 
+       WHERE submission_date >= $1 AND submission_date <= $2`,
+      [weekStart.toISOString().split('T')[0], weekEnd.toISOString().split('T')[0]]
+    );
+
+    // Build maps
+    const userMap = {};
+    users.forEach(u => { userMap[u.id] = u; });
+
+    const courseMap = {};
+    courses.forEach(c => { courseMap[c.id] = c; });
+
+    // Build leaderboard data
+    const leaderboardData = enrollments.map(enrollment => {
+      const user = userMap[enrollment.user_id];
+      const course = courseMap[enrollment.course_id];
+      
+      const userWeekProgress = progress.filter(
+        p => p.user_id === enrollment.user_id && p.course_id === enrollment.course_id
+      );
+      
+      const totalHours = userWeekProgress.reduce(
+        (sum, p) => sum + Number(p.hours_studied || 0),
+        0
+      );
+
+      return {
+        id: enrollment.id,
+        userId: user?.id,
+        userName: user?.full_name || user?.email || 'Unknown',
+        courseName: course?.name || 'Unknown',
+        hours: totalHours,
+        entries: userWeekProgress.length,
+      };
+    })
+    .sort((a, b) => b.hours - a.hours); // Sort by hours descending, keep all
+
+    // Find current user's rank
+    const currentUserId = req.user?.id;
+    const currentUserIndex = leaderboardData.findIndex(item => item.userId === currentUserId);
+    const currentUserRank = currentUserIndex !== -1 ? currentUserIndex + 1 : null;
+
+    return res.json({ leaderboardData, currentUserRank });
+  } catch (error) {
+    console.error(error);
+    return sendError(res, error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Create a new learner account
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               full_name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       400:
+ *         description: Invalid input
+ */
 app.post("/api/auth/register", async (req, res) => {
   const email = String(req.body?.email || "")
     .trim()
@@ -385,6 +591,41 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a user
+ *     description: Authenticate a user and return a JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 access_token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       401:
+ *         description: Invalid credentials
+ */
 app.post("/api/auth/login", async (req, res) => {
   const email = String(req.body?.email || "")
     .trim()
