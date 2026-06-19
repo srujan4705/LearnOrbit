@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, Loader2, ChevronLeft, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, ChevronLeft, AlertCircle, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { calculateUserCurrentDay } from '@/lib/courseUtils';
@@ -265,6 +265,11 @@ export default function CourseDetail() {
                           <Badge variant="outline" className="text-xs">
                             {topic.estimated_hours}h
                           </Badge>
+                        )}
+                        {topic.resource_url && (
+                          <a href={topic.resource_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
                         )}
                         {topicStatus !== 'not_started' && (
                           <Badge
