@@ -5,7 +5,13 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, BookOpen, CheckCircle2, Loader2, Trophy } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Calendar, BookOpen, CheckCircle2, Loader2, Trophy, ChevronDown, Map, User, Home } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/components/ui/use-toast';
 
@@ -86,10 +92,41 @@ export default function BrowseCourses() {
                     {course.start_date && format(new Date(course.start_date), 'MMM d')} - {course.end_date && format(new Date(course.end_date), 'MMM d, yyyy')}
                   </div>
                   {isEnrolled ? (
-                    <Button variant="outline" disabled className="w-full gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-accent" />
-                      Enrolled
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-accent" />
+                          Enrolled
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link to={`/course/${course.id}`} className="flex items-center gap-2 cursor-pointer">
+                            <BookOpen className="w-4 h-4" />
+                            View Course
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/roadmap" className="flex items-center gap-2 cursor-pointer">
+                            <Map className="w-4 h-4" />
+                            My Roadmap
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/" className="flex items-center gap-2 cursor-pointer">
+                            <Home className="w-4 h-4" />
+                            Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link to="/my-courses" className="flex items-center gap-2 cursor-pointer">
+                            <User className="w-4 h-4" />
+                            My Courses
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   ) : (
                     <Button className="w-full" onClick={() => enroll(course.id)}>
                       Enroll Now

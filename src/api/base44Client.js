@@ -141,6 +141,12 @@ export const base44 = {
     async me() {
       return request("/auth/me");
     },
+    async updateProfile(fullName) {
+      return request("/auth/profile", {
+        method: "PUT",
+        body: { full_name: fullName },
+      });
+    },
     async resetPasswordRequest(email) {
       return request("/auth/reset-password-request", {
         method: "POST",

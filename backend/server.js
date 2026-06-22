@@ -187,6 +187,22 @@ app.use(express.json());
 // Swagger UI endpoint
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+// Update current user profile (only their own name)
+app.put("/api/auth/profile", requireAuth, async (req, res) => {
+  try {
+    const { full_name } = req.body;
+    
+    const { rows } = await query(
+      `UPDATE users SET full_name = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, full_name, role, created_at, updated_at`,
+      [full_name, req.user.id]
+    );
+    
+    res.json(rows[0]);
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+
 function getEntityConfig(entityName) {
   return ENTITY_CONFIG[entityName];
 }

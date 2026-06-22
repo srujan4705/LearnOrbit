@@ -26,6 +26,7 @@ import Tracker from '@/pages/Tracker';
 import RoadmapView from '@/pages/RoadmapView';
 import Revision from '@/pages/Revision';
 import Leaderboard from '@/pages/Leaderboard';
+import Profile from '@/pages/Profile';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
           <Route path="/roadmap" element={<RoadmapView />} />
           <Route path="/revision" element={<Revision />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
 

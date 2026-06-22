@@ -9,6 +9,7 @@ import AuthLayout from "@/components/AuthLayout";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +18,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const emailRef = useRef(null);
+  const fullNameRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
 
@@ -29,7 +31,7 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      const result = await base44.auth.register({ email, password });
+      const result = await base44.auth.register({ email, password, full_name: fullName });
       if (result?.access_token) {
         window.location.href = "/";
         return;
@@ -75,6 +77,23 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
+          <Label htmlFor="fullName" className="text-gray-700 font-medium text-sm">Full Name</Label>
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+            <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors duration-300 z-10" aria-hidden="true" />
+            <Input
+              ref={fullNameRef}
+              id="fullName"
+              type="text"
+              autoComplete="name"
+              placeholder="John Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="pl-12 h-14 text-base border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 rounded-xl transition-all duration-300 relative z-10 bg-white"
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="email" className="text-gray-700 font-medium text-sm">Email</Label>
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
@@ -84,7 +103,6 @@ export default function Register() {
               id="email"
               type="email"
               autoComplete="email"
-              autoFocus
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}

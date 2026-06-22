@@ -25,11 +25,11 @@ export default function AppLayout() {
 
       {/* Sidebar - hidden on mobile unless mobileOpen */}
       <div className={`md:block ${mobileOpen ? 'block' : 'hidden'}`}>
-        <Sidebar collapsed={false} setCollapsed={setCollapsed} />
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </div>
 
       {/* Desktop sidebar spacing */}
-      <div className={`transition-all duration-300 md:${collapsed ? 'ml-16' : 'ml-64'}`} style={{ marginLeft: isMobile ? 0 : (collapsed ? '4rem' : '16rem') }}>
+      <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : (collapsed ? 'md:ml-16' : 'md:ml-64')}`}>
         <TopBar onMenuClick={() => setMobileOpen(!mobileOpen)} />
         <main className="p-4 md:p-6">
           <Outlet />
