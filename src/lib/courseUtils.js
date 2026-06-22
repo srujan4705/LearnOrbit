@@ -41,21 +41,36 @@ export function getCurrentWeekAndDay(dayNumber) {
   return { week, day };
 }
 
-export function getTopicForDay(topics, dayNumber) {
-  // Sort topics by week and day, then match by sequential day number
+export function getTopicsForDay(topics, dayNumber) {
+  // Sort topics by week and day, then find all topics in the same week/day as the dayNumber
   const sorted = [...topics].sort((a, b) => {
     if (a.week_number !== b.week_number) return a.week_number - b.week_number;
     return a.day_number - b.day_number;
   });
 
-  // Find the topic whose cumulative position matches the day number
-  // Each topic corresponds to a sequential day
+  // First, find the week and day that corresponds to the sequential day number
   let cumDay = 0;
+  let targetWeek = null;
+  let targetDay = null;
   for (const topic of sorted) {
     cumDay++;
-    if (cumDay === dayNumber) return topic;
+    if (cumDay === dayNumber) {
+      targetWeek = topic.week_number;
+      targetDay = topic.day_number;
+      break;
+    }
   }
-  return null;
+  
+  if (!targetWeek || !targetDay) return [];
+  
+  // Now return all topics with the same week and day
+  return sorted.filter(t => t.week_number === targetWeek && t.day_number === targetDay);
+}
+
+// Keep getTopicForDay for backwards compatibility, returns first topic of the day
+export function getTopicForDay(topics, dayNumber) {
+  const topicsForDay = getTopicsForDay(topics, dayNumber);
+  return topicsForDay[0] || null;
 }
 
 export function getCompletionPercentage(totalTopics, completedTopics) {

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 const TOAST_LIMIT = 20;
-const TOAST_REMOVE_DELAY = 3000;
+const TOAST_REMOVE_DELAY = 1000;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -119,8 +119,15 @@ function toast({ ...props }) {
       toast: { ...props, id },
     });
 
-  const dismiss = () =>
+  const dismiss = () => {
+    // Clear the auto-dismiss timeout if it exists
+    const timeout = toastTimeouts.get(id);
+    if (timeout) {
+      clearTimeout(timeout);
+      toastTimeouts.delete(id);
+    }
     dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+  };
 
   dispatch({
     type: actionTypes.ADD_TOAST,
@@ -133,6 +140,14 @@ function toast({ ...props }) {
       },
     },
   });
+
+  // Auto-dismiss the toast after TOAST_REMOVE_DELAY
+  const autoDismissTimeout = setTimeout(() => {
+    dismiss();
+  }, TOAST_REMOVE_DELAY);
+  
+  // Store the auto-dismiss timeout so we can clear it if the user dismisses manually
+  toastTimeouts.set(id, autoDismissTimeout);
 
   return {
     id,

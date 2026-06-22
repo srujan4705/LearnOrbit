@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
   calculateCourseCurrentDay,
-  getTopicForDay,
+  getTopicsForDay,
   getCompletionPercentage,
   isCourseStarted,
 } from "@/lib/courseUtils";
@@ -20,7 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 function CourseCard({ course, topics, progress, user, queryClient }) {
   const courseCurrentDay = calculateCourseCurrentDay(course.start_date);
   const isStarted = isCourseStarted(course.start_date);
-  const todayTopic = isStarted && courseCurrentDay > 0 ? getTopicForDay(topics, courseCurrentDay) : null;
+  const todayTopics = isStarted && courseCurrentDay > 0 ? getTopicsForDay(topics, courseCurrentDay) : [];
   const completedCount = progress.filter(
     (p) => p.status === "completed",
   ).length;
@@ -29,9 +29,9 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
     0,
   );
   const completion = getCompletionPercentage(topics.length, completedCount);
-  const todayProgress = todayTopic
-    ? progress.find((p) => p.topic_id === todayTopic.id)
-    : null;
+  // Get all progress entries for today's topics
+  const todayTopicIds = todayTopics.map(t => t.id);
+  const todayProgress = progress.filter(p => todayTopicIds.includes(p.topic_id));
   const currentWeek = isStarted ? Math.ceil(courseCurrentDay / 7) : 0;
 
   return (
@@ -71,7 +71,7 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
           <div className="p-3 rounded-lg bg-muted/50">
             <div className="text-xs text-muted-foreground mb-1">Today</div>
             <div className="text-xl font-bold text-primary">
-              {!isStarted ? "🚀" : todayTopic ? "📖" : "✓"}
+              {!isStarted ? "🚀" : todayTopics.length > 0 ? "📖" : "✓"}
             </div>
           </div>
         </div>
@@ -83,9 +83,9 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
           </p>
         </div>
 
-        {isStarted && todayTopic ? (
+        {isStarted && todayTopics.length > 0 ? (
           <TodayTask
-            topic={todayTopic}
+            topics={todayTopics}
             course={course}
             currentDay={courseCurrentDay}
             existingProgress={todayProgress}

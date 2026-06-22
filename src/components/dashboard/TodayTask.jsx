@@ -10,14 +10,21 @@ import { ExternalLink, Clock, BookOpen, Send, CheckCircle2, Loader2 } from 'luci
 import { base44 } from '@/api/base44Client';
 import { toast } from '@/components/ui/use-toast';
 
-export default function TodayTask({ topic, course, currentDay: _currentDay, existingProgress, userId, onProgressSubmitted }) {
-  const [status, setStatus] = useState(existingProgress?.status || 'not_started');
-  const [hours, setHours] = useState(existingProgress?.hours_studied?.toString() || '');
-  const [difficulty, setDifficulty] = useState(existingProgress?.difficulty || '');
-  const [remarks, setRemarks] = useState(existingProgress?.remarks || '');
+export default function TodayTask({ topics: topicsProp, course, currentDay: _currentDay, existingProgress: existingProgressProp, userId, onProgressSubmitted }) {
+  // Support both singular topic and plural topics for backwards compatibility
+  const topics = topicsProp || (topicsProp === undefined && existingProgressProp?.topic ? [topicsProp] : topicsProp) || [];
+  const topic = topics[0]; // For header info
+  
+  // Get the first existing progress for initial state
+  const firstExistingProgress = Array.isArray(existingProgressProp) ? existingProgressProp[0] : existingProgressProp;
+  
+  const [status, setStatus] = useState(firstExistingProgress?.status || 'not_started');
+  const [hours, setHours] = useState(firstExistingProgress?.hours_studied?.toString() || '');
+  const [difficulty, setDifficulty] = useState(firstExistingProgress?.difficulty || '');
+  const [remarks, setRemarks] = useState(firstExistingProgress?.remarks || '');
   const [submitting, setSubmitting] = useState(false);
 
-  if (!topic) {
+  if (!topics || topics.length === 0) {
     return (
       <Card className="border-dashed">
         <CardContent className="p-8 text-center">
@@ -40,24 +47,36 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
     }
     setSubmitting(true);
     try {
-      const data = {
-        user_id: userId,
-        course_id: course.id,
-        topic_id: topic.id,
-        week_number: topic.week_number,
-        day_number: topic.day_number,
-        status,
-        hours_studied: hoursValue,
-        difficulty,
-        remarks,
-        submission_date: new Date().toISOString().split('T')[0],
-      };
+      // Submit progress for all topics in the day
+      for (const t of topics) {
+        // Find existing progress for this specific topic
+        let existingProgressForTopic;
+        if (Array.isArray(existingProgressProp)) {
+          existingProgressForTopic = existingProgressProp.find(p => p.topic_id === t.id);
+        } else if (existingProgressProp?.topic_id === t.id) {
+          existingProgressForTopic = existingProgressProp;
+        }
+        
+        const data = {
+          user_id: userId,
+          course_id: course.id,
+          topic_id: t.id,
+          week_number: t.week_number,
+          day_number: t.day_number,
+          status,
+          hours_studied: hoursValue,
+          difficulty,
+          remarks,
+          submission_date: new Date().toISOString().split('T')[0],
+        };
 
-      if (existingProgress?.id) {
-        await base44.entities.UserProgress.update(existingProgress.id, data);
-      } else {
-        await base44.entities.UserProgress.create(data);
+        if (existingProgressForTopic?.id) {
+          await base44.entities.UserProgress.update(existingProgressForTopic.id, data);
+        } else {
+          await base44.entities.UserProgress.create(data);
+        }
       }
+      
       toast({ title: 'Progress submitted!', description: 'Keep up the great work.' });
       onProgressSubmitted?.();
     } catch (error) {
@@ -66,6 +85,8 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
       setSubmitting(false);
     }
   };
+
+  const totalEstimatedHours = topics.reduce((sum, t) => sum + (Number(t.estimated_hours) || 1), 0);
 
   return (
     <Card className="overflow-hidden">
@@ -76,30 +97,34 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Week {topic.week_number} · Day {topic.day_number}
             </p>
-            <CardTitle className="text-xl mt-1">{topic.topic_name}</CardTitle>
+            <CardTitle className="text-xl mt-1">{topics.length === 1 ? topic.topic_name : `${topics.length} Topics Today`}</CardTitle>
           </div>
           <Badge variant="outline" className="gap-1.5">
             <Clock className="w-3.5 h-3.5" />
-            {topic.estimated_hours || 1}h estimated
+            {totalEstimatedHours.toFixed(1)}h estimated
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
-        {topic.topic_description && (
-          <p className="text-sm text-muted-foreground leading-relaxed">{topic.topic_description}</p>
-        )}
-
-        {topic.resource_url && (
-          <a
-            href={topic.resource_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-medium"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Open Learning Resource
-          </a>
-        )}
+        {topics.map((t, index) => (
+          <div key={t.id} className={index > 0 ? 'border-t pt-4' : ''}>
+            <h4 className="font-medium text-sm mb-2">{t.topic_name}</h4>
+            {t.topic_description && (
+              <p className="text-sm text-muted-foreground leading-relaxed mb-2">{t.topic_description}</p>
+            )}
+            {t.resource_url && (
+              <a
+                href={t.resource_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-sm font-medium"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open Learning Resource
+              </a>
+            )}
+          </div>
+        ))}
 
         <div className="border-t pt-5 space-y-4">
           <h4 className="font-semibold text-sm flex items-center gap-2">
@@ -160,7 +185,7 @@ export default function TodayTask({ topic, course, currentDay: _currentDay, exis
             ) : (
               <CheckCircle2 className="w-4 h-4 mr-2" />
             )}
-            {existingProgress?.id ? 'Update Progress' : 'Submit Progress'}
+            Submit Progress
           </Button>
         </div>
       </CardContent>
