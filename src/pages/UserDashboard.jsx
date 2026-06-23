@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -21,6 +21,13 @@ function CourseCard({ course, topics, progress, user, queryClient }) {
   const courseCurrentDay = calculateCourseCurrentDay(course.start_date);
   const isStarted = isCourseStarted(course.start_date);
   const todayTopics = isStarted && courseCurrentDay > 0 ? getTopicsForDay(topics, courseCurrentDay) : [];
+  
+  // Debug logs
+  console.log('Course:', course.name);
+  console.log('Course start date:', course.start_date);
+  console.log('Course current day:', courseCurrentDay);
+  console.log('Today topics:', todayTopics);
+  console.log('All progress:', progress);
   const completedCount = progress.filter(
     (p) => p.status === "completed",
   ).length;
@@ -112,27 +119,59 @@ export default function UserDashboard() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Refresh data at midnight
+  useEffect(() => {
+    const refreshAtMidnight = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0); // Set to next midnight
+      const timeUntilMidnight = midnight.getTime() - now.getTime();
+      
+      const timeoutId = setTimeout(() => {
+        queryClient.invalidateQueries(); // Invalidate all queries
+        refreshAtMidnight(); // Set up next midnight refresh
+      }, timeUntilMidnight);
+      
+      return () => clearTimeout(timeoutId);
+    };
+    
+    const cleanup = refreshAtMidnight();
+    return cleanup;
+  }, [queryClient]);
+
   const { data: enrollments = [] } = useQuery({
     queryKey: ["enrollments", user?.id],
     queryFn: () =>
       base44.entities.Enrollment.filter({ user_id: user.id, status: "active" }),
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0, // Always consider data stale
   });
 
   const { data: courses = [] } = useQuery({
     queryKey: ["courses"],
     queryFn: () => base44.entities.Course.filter({ status: "active" }),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const { data: allTopics = [] } = useQuery({
     queryKey: ["all-topics"],
     queryFn: () => base44.entities.CourseTopic.list("-created_date", 500),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const { data: allProgress = [] } = useQuery({
     queryKey: ["user-progress", user?.id],
     queryFn: () => base44.entities.UserProgress.filter({ user_id: user.id }),
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const enrolledCourseIds = enrollments.map((e) => e.course_id);

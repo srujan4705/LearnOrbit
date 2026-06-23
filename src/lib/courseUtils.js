@@ -13,9 +13,16 @@ export function calculateUserCurrentDay(userProgress) {
   if (!userProgress || userProgress.length === 0) {
     return 1; // New user starts at day 1
   }
-  // Get the highest day number completed, then next day is current
-  const maxDay = Math.max(...userProgress.map(p => p.day_number || 0));
-  return maxDay + 1;
+  
+  // Count unique week/day combinations from user progress
+  const completedDayKeys = new Set();
+  userProgress.forEach(p => {
+    if (p.week_number && p.day_number) {
+      completedDayKeys.add(`${p.week_number}-${p.day_number}`);
+    }
+  });
+  
+  return completedDayKeys.size + 1; // Next day after completed days
 }
 
 export function calculateUserDayFromEnrollment(enrollmentDate) {
@@ -42,29 +49,38 @@ export function getCurrentWeekAndDay(dayNumber) {
 }
 
 export function getTopicsForDay(topics, dayNumber) {
-  // Sort topics by week and day, then find all topics in the same week/day as the dayNumber
+  // Sort topics by week and day
   const sorted = [...topics].sort((a, b) => {
     if (a.week_number !== b.week_number) return a.week_number - b.week_number;
     return a.day_number - b.day_number;
   });
 
-  // First, find the week and day that corresponds to the sequential day number
-  let cumDay = 0;
-  let targetWeek = null;
-  let targetDay = null;
+  // Group topics by week and day
+  const dayGroups = [];
+  let currentWeek = null;
+  let currentDay = null;
+  let currentGroup = [];
+  
   for (const topic of sorted) {
-    cumDay++;
-    if (cumDay === dayNumber) {
-      targetWeek = topic.week_number;
-      targetDay = topic.day_number;
-      break;
+    if (topic.week_number !== currentWeek || topic.day_number !== currentDay) {
+      if (currentGroup.length > 0) {
+        dayGroups.push(currentGroup);
+      }
+      currentWeek = topic.week_number;
+      currentDay = topic.day_number;
+      currentGroup = [topic];
+    } else {
+      currentGroup.push(topic);
     }
   }
   
-  if (!targetWeek || !targetDay) return [];
+  if (currentGroup.length > 0) {
+    dayGroups.push(currentGroup);
+  }
   
-  // Now return all topics with the same week and day
-  return sorted.filter(t => t.week_number === targetWeek && t.day_number === targetDay);
+  // Get the group at the specified day number
+  const targetGroup = dayGroups[dayNumber - 1];
+  return targetGroup || [];
 }
 
 // Keep getTopicForDay for backwards compatibility, returns first topic of the day

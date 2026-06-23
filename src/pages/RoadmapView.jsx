@@ -17,6 +17,9 @@ export default function RoadmapView() {
     queryKey: ['enrollments', user?.id],
     queryFn: () => base44.entities.Enrollment.filter({ user_id: user.id, status: 'active' }),
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const courseIds = enrollments.map(e => e.course_id);
@@ -24,6 +27,9 @@ export default function RoadmapView() {
   const { data: allCourses = [] } = useQuery({
     queryKey: ['courses'],
     queryFn: () => base44.entities.Course.filter({ status: 'active' }),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const courses = allCourses.filter(c => courseIds.includes(c.id));
@@ -31,12 +37,18 @@ export default function RoadmapView() {
   const { data: allTopics = [], isLoading: topicsLoading } = useQuery({
     queryKey: ['all-topics'],
     queryFn: () => base44.entities.CourseTopic.list('-created_date', 500),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const { data: progress = [] } = useQuery({
     queryKey: ['user-progress', user?.id],
     queryFn: () => base44.entities.UserProgress.filter({ user_id: user.id }),
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 
   const completedTopicIds = new Set(progress.filter(p => p.status === 'completed').map(p => p.topic_id));
